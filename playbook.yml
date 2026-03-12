@@ -1,0 +1,178 @@
+---
+
+- name: --Install Prometheus--
+  hosts: prometheus
+  become: yes
+
+  tasks:
+
+    - name: create prometheus user
+      user:
+        name: prometheus
+        shell: /usr/sbin/nologin
+
+    - name: create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: prometheus
+        group: prometheus
+      loop:
+        - /etc/prometheus
+        - /var/lib/prometheus
+
+    - name: download prometheus
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/latest/download/prometheus-3.10.0.linux-arm64.tar.gz
+        dest: /tmp/prometheus.tar.gz
+
+    - name: extract prometheus
+      unarchive:
+        src: /tmp/prometheus.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: create systemd service
+      copy:
+        dest: /etc/systemd/system/prometheus.service
+        content: |
+          [Unit]
+          Description=prometheus
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User=prometheus
+          Group=prometheus
+          Type=simple
+          ExecStart=/tmp/prometheus.tar.gz
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: restart systemd
+      command: systemctl restart prometheus.service
+
+    - name: start prometheus
+      systemd:
+        name: prometheus
+        enabled: yes
+        state: started
+
+- name: --install node exporter--
+  hosts: nodex
+  become: yes
+
+  tasks:
+
+    - name: create nodex user
+      user:
+        name: nodex
+        shell: /usr/sbin/nologin
+
+    - name: create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: nodex
+        group: nodex
+      loop:
+        - /etc/node_exporter
+        - /var/lib/node_exporter
+
+    - name: download nodex
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/latest/download/node_exporter-1.10.2.linux-arm64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+
+    - name: extract nodex
+      unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: create systemd service
+      copy:
+        dest: /etc/systemd/system/node_exporter.service
+        content: |
+          [Unit]
+          Description=node_exporter
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User=nodex
+          Group=nodex
+          Type=simple
+          ExecStart=/tmp/node_exporter.tar.gz
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: restart systemd
+      command: systemctl restart node_exporter.service
+
+    - name: start nodex
+      systemd:
+        name: node_exporter
+        enabled: yes
+        state: started
+
+- name: --install alert manager--
+  hosts: prometheus
+  become: yes
+
+  tasks:
+
+    - name: create alert user
+      user:
+        name: alerti
+        shell: /usr/sbin/nologin
+
+    - name: create directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: alerti
+        group: alerti
+      loop:
+        -  /etc/alertmanger
+        - /var/lib/alertmanager
+
+    - name: download alerti
+      get_url:
+        url: https://github.com/prometheus/alertmanager/releases/download/v0.31.0/alertmanager-0.31.0.linux-arm64.tar.gz
+        dest: /tmp/alertmanager.tar.gz
+
+    - name: extract alerti
+      unarchive:
+        src: /tmp/alertmanager.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: create systemd service
+      copy:
+        dest: /etc/systemd/system/alertmanager.service
+        content: |
+          [Unit]
+          Description=alertmanager
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User=alerti
+          Group=alerti
+          Type=simple
+          ExecStart=/usr/local/bin/alertmanager
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: restart systemd
+      command: systemctl restart alertmanager.service
+
+    - name: start alterti
+      systemd:
+        name: alertmanager
+        enabled: yes
+        state: started

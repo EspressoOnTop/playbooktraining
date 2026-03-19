@@ -13,7 +13,7 @@
     - "alerts.yml"
 
   scrape_configs:
-    - job_name: "node"
+    - job_name: "Ubuntu Node"
       static_configs:
         - targets:
           - "{{ prometheus_ip }}:9100"

@@ -20,18 +20,18 @@
         owner: prometheus
         group: prometheus
       loop:
-        - /usr/local/prometheus
+        - /usr/local/bin/prometheus
         - /var/lib/prometheus
 
     - name: download prometheus
       get_url:
-        url: https://github.com/prometheus/prometheus/releases/latest/download/prometheus-3.10.0.linux-arm64.tar.gz
+        url: https://github.com/prometheus/prometheus/releases/download/v3.10.0/prometheus-3.10.0.linux-arm64.tar.gz
         dest: /tmp/prometheus.tar.gz
 
     - name: extract prometheus
       unarchive:
         src: /tmp/prometheus.tar.gz
-        dest: /usr/local/prometheus
+        dest: /usr/local/bin/prometheus
         remote_src: yes
 
     - name: create systemd service
@@ -48,8 +48,8 @@
           Group=prometheus
           Type=simple
           Restart=on-failure
-          ExecStart=/usr/local/prometheus/prometheus-3.10.0.linux-arm64/prometheus \
-            --config.file=/usr/local/prometheus/prometheus-3.10.0.linux-arm64/prometheus.yml \
+          ExecStart=/usr/local/bin/prometheus/prometheus-3.10.0.linux-arm64/prometheus \
+            --config.file=/usr/local/bin/prometheus/prometheus-3.10.0.linux-arm64/prometheus.yml \
             --storage.tsdb.path=/var/lib/prometheus
             --web.listen-address=0.0.0.0:9090
 
@@ -62,18 +62,19 @@
 
     - name: test alert
       copy:
-        dest: /usr/local/prometheus/prometheus-3.10.0.linux-arm64/alerts.yml
+        dest: /usr/local/bin/prometheus/prometheus-3.10.0.linux-arm64/alerts.yml
         content: |
           groups:
-            - name: example
+            - name: cpu-alert
               rules:
-                - alert: "ALARM!!!"
-                  expr: vector(1)
-                  for: 10s
+                - alert: "CPU ALARM"
+                  expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
+                  for: 1m
                   labels:
-                    severity: critical
+                    severity: warning
                   annotations:
-                    summary: "ALARM ALARM"
+                    summary: "ALARMMM UBUNTU CPU USAGE TOO HIGH WATCH OUT NOO"
+                    description: "I kinda already said everything but yes cpu usage is over 80% on Ubuntu"
         owner: prometheus
         group: prometheus
         mode: '0644'
@@ -81,7 +82,7 @@
     - name: configure prometheus.yml
       template:
         src: prometheus.yml.j2
-        dest: /usr/local/prometheus/prometheus-3.10.0.linux-arm64/prometheus.yml
+        dest: /usr/local/bin/prometheus/prometheus-3.10.0.linux-arm64/prometheus.yml
         owner: prometheus
         group: prometheus
         mode: '0644'

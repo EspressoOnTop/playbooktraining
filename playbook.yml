@@ -67,14 +67,14 @@
           groups:
             - name: cpu-alert
               rules:
-                - alert: "CPU ALARM"
+                - alert: "CPU ALARM!!!"
                   expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
                   for: 1m
                   labels:
                     severity: warning
                   annotations:
-                    summary: "ALARMMM UBUNTU CPU USAGE TOO HIGH WATCH OUT NOO"
-                    description: "I kinda already said everything but yes cpu usage is over 80% on Ubuntu"
+                    summary: "I kinda already said everything but yes cpu usage is over 80% on Ubuntu."
+                    description: "ALARM!! UBUNTU CPU USAGE TOO HIGH! WATCH OUT NOO!!"
         owner: prometheus
         group: prometheus
         mode: '0644'
